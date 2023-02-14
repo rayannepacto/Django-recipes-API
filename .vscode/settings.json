@@ -1,6 +1,6 @@
 {
   "window.zoomLevel": 2,
-  "editor.fontSize": 14,
+  "editor.fontSize": 13,
   "python.languageServer": "Jedi", // ms-python.vscode-pylance
   "python.testing.unittestEnabled": false, // ms-python.python
   "python.testing.pytestEnabled": true,
