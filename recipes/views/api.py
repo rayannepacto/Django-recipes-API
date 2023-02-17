@@ -1,38 +1,50 @@
 from rest_framework.decorators import api_view
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from rest_framework.views import APIView
 
 from ..models import Recipe, Tag
 from ..serializers import RecipeSerializer, TagSerializer
+from rest_framework.viewsets import ModelViewSet
 
 
-@api_view(http_method_names=['get', 'post'])
-def recipe_api_list(request):
-    if request.method == 'GET':
-        recipes = Recipe.objects.get_published()[:10]
+class RecipeAPIv2Pagination(PageNumberPagination):
+    page_size = 2
+
+
+class RecipeAPIv2ViewSet(ModelViewSet):
+    queryset = Recipe.objects.get_published()
+    serializer_class = RecipeSerializer
+    pagination_class = RecipeAPIv2Pagination
+
+    def partial_update(self, request, *args, **kwargs):
+        recipe = self.get_object()
         serializer = RecipeSerializer(
-        instance=recipes, many=True, context={'request': request})
-        return Response(serializer.data)
-    elif request.method == 'POST':
-        serializer = RecipeSerializer(data=request.data)
+            instance=recipe,
+            data=request.data,
+            many=False,
+            context={'request': request},
+            partial=True,
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.validated.data,serializer.data, status=status.HTTP_201_CREATED)
-
-
-@api_view()
-def recipe_api_detail(request, pk):
-    recipe = get_object_or_404(Recipe.objects.get_published(), pk=pk)
-    serializer = RecipeSerializer(
-        instance=recipe, many=False, context={'request': request})
-    return Response(serializer.data)
+        return Response(
+            serializer.data,
+        )
 
 
 @api_view()
 def tag_api_detail(request, pk):
-    tag = get_object_or_404(Tag.objects.all(), pk=pk)
+    tag = get_object_or_404(
+        Tag.objects.all(),
+        pk=pk
+    )
     serializer = TagSerializer(
-        instance=tag, many=False, context={'request': request})
-
-    return Response(True)
+        instance=tag,
+        many=False,
+        context={'request': request},
+    )
+    return Response(serializer.data)
